@@ -43,6 +43,8 @@ tables = soup.findAll("table",{"class":"data standings Conference"})
 east_table = tables[0]
 west_table = tables[1]
 
+TEAM_DIVISION_MAP = {}
+
 def get_standings(table):
     table_body = table.find('tbody')
     CONF_STANDINGS = {}
@@ -52,6 +54,8 @@ def get_standings(table):
         if col[0]['colspan'] != '17':
             team = col[1].find('a')
             team = str(team['rel'])
+            
+            TEAM_DIVISION_MAP[team] = str(col[2].contents[0])
             
             points = int(col[7].contents[0])
             
@@ -77,7 +81,7 @@ OPTIONS = [
     ('WIN', 38), ('LOSE', 38), ('OTWIN', 12), ('OTLOSE', 12)
 ]
 
-sims = 500000
+sims = 1000000
 completed_sims = 0
 in_playoffs = 0
 out_playoffs = 0
@@ -119,9 +123,36 @@ for x in range(sims):
             gm['result'] = result
                 
             sim_games.append(gm)
-                
+        
+        
         NEW_STANDINGS_EAST = {i: j for i, j in STANDINGS.iteritems() if i in STANDINGS_EAST.keys()}
         sorted_e = sorted(NEW_STANDINGS_EAST.iteritems(), key=operator.itemgetter(1), reverse=True)
+        
+        ATL = set()
+        NE = set()
+        SE = set()
+        
+        for team, points in NEW_STANDINGS_EAST.iteritems():
+            if TEAM_DIVISION_MAP[team] == 'ATL':
+                ATL.add((team, points))
+            elif TEAM_DIVISION_MAP[team] == 'NE':
+                NE.add((team, points))
+            elif TEAM_DIVISION_MAP[team] == 'SE':
+                SE.add((team, points))
+                
+        sorted_atl = sorted(ATL, key=operator.itemgetter(1), reverse=True)
+        sorted_ne = sorted(NE, key=operator.itemgetter(1), reverse=True)
+        sorted_se = sorted(SE, key=operator.itemgetter(1), reverse=True)
+        
+        sorted_e = []
+        sorted_e.append(sorted_atl.pop(0))
+        sorted_e.append(sorted_ne.pop(0))
+        sorted_e.append(sorted_se.pop(0))
+        
+        sorted_e = sorted(sorted_e, key=operator.itemgetter(1), reverse=True)
+        the_rest = sorted(sorted_atl + sorted_ne + sorted_se, key=operator.itemgetter(1), reverse=True)
+        sorted_e = sorted_e + the_rest
+        
         teams_e = [x[0] for x in sorted_e]
         points_e = [x[1] for x in sorted_e]
     
@@ -199,7 +230,7 @@ for i, count in enumerate(positions):
     probability = 100 * float(count) / float(completed_sims)
     print '%s: %s%%\t |%s' % (ordinalize(i + 1), probability, '=' * 2 * int(round(probability, 0)))
     if i == 7:
-        print '-' * 50
+        print '-' * 50 + " The #fail line"
 
 print
 print "Best found simulated finish: %s in conference with %s points" % (ordinalize(best_order.index(my_team) + 1), best_points), ', '.join(best_order)
