@@ -13,7 +13,7 @@ its division.
 
 
 OUTCOMES = [('WIN', 38), ('LOSS', 38), ('OTWIN', 12), ('OTLOSS', 12)]
-N = 5000
+N = 10000
 MY_TEAM = 'TOR'
 
 def weighted_choice(s):
@@ -171,7 +171,7 @@ class PlayoffSimulator(object):
             if game['win_good'] > game['loss_good']:
                 root_for = 'root for %s' % game['home']
             elif game['win_good'] < game['loss_good']:
-                root_for = 'root for %s' % game['home']
+                root_for = 'root for %s' % game['away']
             else:
                 root_for = 'don\'t care'
 
